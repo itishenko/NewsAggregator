@@ -40,6 +40,9 @@ class NewsItemCellNode: ASCellNode {
         imageNode.placeholderColor = UIColor.systemGray5
         imageNode.style.preferredSize = CGSize(width: 80, height: 80)
         
+        imageNode.image = createDefaultPlaceholder()
+        imageNode.defaultImage = createDefaultPlaceholder()
+        
         containerNode.backgroundColor = .systemBackground
         containerNode.cornerRadius = 12
         containerNode.borderColor = UIColor.systemGray5.cgColor
@@ -50,25 +53,39 @@ class NewsItemCellNode: ASCellNode {
         readIndicatorNode.cornerRadius = 4
     }
     
+    private func createDefaultPlaceholder() -> UIImage {
+        let config = UIImage.SymbolConfiguration(pointSize: 32, weight: .light)
+        let image = UIImage(systemName: "newspaper", withConfiguration: config)?
+            .withTintColor(.systemGray3, renderingMode: .alwaysOriginal)
+        return image ?? UIImage(systemName: "photo")!
+    }
+    
     // MARK: - Configuration
     
     func configure(with newsItemData: NewsItemData, displayMode: DisplayMode, imageCacheService: ImageCacheServiceProtocol?) {
         self.newsItemData = newsItemData
         self.displayMode = displayMode
         
+        let placeholder = createDefaultPlaceholder()
+        imageNode.image = placeholder
+        
         if let imageURLString = newsItemData.imageURL, let imageURL = URL(string: imageURLString) {
             if let cacheService = imageCacheService {
                 cacheService.loadImage(from: imageURLString) { [weak self] image in
                     DispatchQueue.main.async {
-                        self?.imageNode.image = image ?? UIImage(systemName: "photo")
+                        guard let self = self else { return }
+                        if let loadedImage = image {
+                            self.imageNode.image = loadedImage
+                        } else {
+                            self.imageNode.image = placeholder
+                        }
                     }
                 }
             } else {
+                // Use ASNetworkImageNode's built-in loading
                 imageNode.url = imageURL
+                imageNode.defaultImage = placeholder
             }
-            imageNode.image = nil
-        } else {
-            imageNode.image = UIImage(systemName: "photo")
         }
         
         // Configure title
