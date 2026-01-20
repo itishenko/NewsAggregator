@@ -11,8 +11,6 @@ class NewsListViewController: ASDKViewController<ASTableNode> {
     
     // MARK: - Properties
     
-    weak var coordinator: NewsListCoordinator?
-    
     private let viewModel: NewsListViewModel
     private let imageCacheService: ImageCacheServiceProtocol
     private let refreshControl = UIRefreshControl()
@@ -47,15 +45,11 @@ class NewsListViewController: ASDKViewController<ASTableNode> {
         let shouldRefresh = viewModel.shouldAutoRefresh()
         
         if viewModel.numberOfItems() == 0 {
-            showFirstLaunchMessage()
+            viewModel.showFirstLaunchMessage()
             viewModel.refreshNews()
         } else if shouldRefresh {
             viewModel.refreshNews()
         }
-    }
-    
-    private func showFirstLaunchMessage() {
-        coordinator?.showFirstLaunchMessage()
     }
     
     // MARK: - Setup
@@ -85,9 +79,9 @@ class NewsListViewController: ASDKViewController<ASTableNode> {
             }
         }
         
-        viewModel.onError = { [weak self] error in
+        viewModel.onShowError = { [weak self] error in
             DispatchQueue.main.async {
-                self?.coordinator?.showError(message: error)
+                self?.viewModel.showError(message: error)
             }
         }
         
@@ -138,21 +132,7 @@ class NewsListViewController: ASDKViewController<ASTableNode> {
     }
     
     @objc private func openSettings() {
-        coordinator?.showSettings { [weak self] in
-            self?.viewModel.updateRefreshInterval()
-        }
-    }
-    
-    private func openNewsDetail(for newsItem: NewsItem, at index: Int) {
-        guard let url = URL(string: newsItem.link) else { return }
-        
-        coordinator?.showNewsDetail(
-            url: url,
-            newsItemIndex: index,
-            onMarkAsRead: { [weak self] index in
-                self?.viewModel.markAsRead(at: index)
-            }
-        )
+        viewModel.showSettings()
     }
 }
 
@@ -198,9 +178,6 @@ extension NewsListViewController: ASTableDataSource {
 extension NewsListViewController: ASTableDelegate {
     func tableNode(_ tableNode: ASTableNode, didSelectRowAt indexPath: IndexPath) {
         tableNode.deselectRow(at: indexPath, animated: true)
-        
-        if let newsItem = viewModel.getNewsItem(at: indexPath.row) {
-            openNewsDetail(for: newsItem, at: indexPath.row)
-        }
+        viewModel.showNewsDetail(at: indexPath.row)
     }
 }

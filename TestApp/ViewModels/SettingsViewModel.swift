@@ -18,6 +18,8 @@ class SettingsViewModel {
     private let imageCacheService: ImageCacheServiceProtocol
     private var sourcesNotificationToken: NotificationToken?
     
+    weak var coordinator: SettingsCoordinator?
+    
     var sources: Results<NewsSource>? {
         didSet {
             setupSourcesNotifications()
@@ -104,6 +106,38 @@ class SettingsViewModel {
         let id = name.lowercased().replacingOccurrences(of: " ", with: "_")
         sourceRepository.add(id: id, name: name, rssURL: url)
         return true
+    }
+    
+    // MARK: - Navigation Methods
+    
+    func dismiss() {
+        coordinator?.dismiss()
+    }
+    
+    func showRefreshIntervalPicker() {
+        coordinator?.showRefreshIntervalPicker(currentInterval: settings.refreshIntervalMinutes) { [weak self] interval in
+            self?.updateRefreshInterval(minutes: interval)
+        }
+    }
+    
+    func showAddSourceDialog() {
+        coordinator?.showAddSourceDialog { [weak self] name, url in
+            return self?.addNewSource(name: name, url: url) ?? false
+        }
+    }
+    
+    func showClearCacheConfirmation() {
+        coordinator?.showClearCacheConfirmation { [weak self] in
+            self?.clearCache()
+        }
+    }
+    
+    func showAlert(title: String, message: String) {
+        coordinator?.showAlert(title: title, message: message)
+    }
+    
+    func notifySettingsChanged() {
+        coordinator?.onSettingsChanged?()
     }
     
     // MARK: - Private Methods

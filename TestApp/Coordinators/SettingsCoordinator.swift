@@ -29,8 +29,9 @@ class SettingsCoordinator: Coordinator {
             settingsRepository: dependencyContainer.settingsRepository,
             imageCacheService: dependencyContainer.imageCacheService
         )
+        viewModel.coordinator = self
+        
         let viewController = SettingsViewController(viewModel: viewModel)
-        viewController.coordinator = self
         settingsViewController = viewController
         
         let navController = UINavigationController(rootViewController: viewController)

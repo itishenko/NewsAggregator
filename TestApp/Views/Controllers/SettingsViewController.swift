@@ -11,8 +11,6 @@ class SettingsViewController: ASDKViewController<ASTableNode> {
     
     // MARK: - Properties
     
-    weak var coordinator: SettingsCoordinator?
-    
     private let viewModel: SettingsViewModel
     
     private enum Section: Int, CaseIterable {
@@ -59,21 +57,21 @@ class SettingsViewController: ASDKViewController<ASTableNode> {
         viewModel.onSourcesUpdated = { [weak self] in
             DispatchQueue.main.async {
                 self?.node.reloadData()
-                self?.coordinator?.onSettingsChanged?()
+                self?.viewModel.notifySettingsChanged()
             }
         }
         
         viewModel.onSettingsUpdated = { [weak self] in
             DispatchQueue.main.async {
                 self?.node.reloadData()
-                self?.coordinator?.onSettingsChanged?()
+                self?.viewModel.notifySettingsChanged()
             }
         }
         
         viewModel.onCacheCleared = { [weak self] in
             DispatchQueue.main.async {
                 self?.node.reloadData()
-                self?.coordinator?.showAlert(title: "", message: "Кэш успешно очищен")
+                self?.viewModel.showAlert(title: "", message: "Кэш успешно очищен")
             }
         }
     }
@@ -93,28 +91,7 @@ class SettingsViewController: ASDKViewController<ASTableNode> {
     // MARK: - Actions
     
     @objc private func closeSettings() {
-        coordinator?.dismiss()
-    }
-    
-    private func showRefreshIntervalPicker() {
-        coordinator?.showRefreshIntervalPicker(
-            currentInterval: viewModel.settings.refreshIntervalMinutes,
-            onIntervalSelected: { [weak self] interval in
-                self?.viewModel.updateRefreshInterval(minutes: interval)
-            }
-        )
-    }
-    
-    private func showAddSourceDialog() {
-        coordinator?.showAddSourceDialog { [weak self] name, url in
-            return self?.viewModel.addNewSource(name: name, url: url) ?? false
-        }
-    }
-    
-    private func clearCache() {
-        coordinator?.showClearCacheConfirmation { [weak self] in
-            self?.viewModel.clearCache()
-        }
+        viewModel.dismiss()
     }
 }
 
@@ -357,14 +334,14 @@ extension SettingsViewController: ASTableDelegate {
         
         switch sectionType {
         case .refresh:
-            showRefreshIntervalPicker()
+            viewModel.showRefreshIntervalPicker()
         case .sources:
             if indexPath.row == viewModel.numberOfSources() {
-                showAddSourceDialog()
+                viewModel.showAddSourceDialog()
             }
         case .cache:
             if indexPath.row == 1 {
-                clearCache()
+                viewModel.showClearCacheConfirmation()
             }
         case .about:
             break

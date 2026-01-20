@@ -29,11 +29,12 @@ class NewsListCoordinator: Coordinator {
             settingsRepository: dependencyContainer.settingsRepository,
             newsService: dependencyContainer.newsService
         )
+        viewModel.coordinator = self
+        
         let viewController = NewsListViewController(
             viewModel: viewModel,
             imageCacheService: dependencyContainer.imageCacheService
         )
-        viewController.coordinator = self
         newsListViewController = viewController
         
         navigationController.pushViewController(viewController, animated: false)

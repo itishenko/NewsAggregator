@@ -25,6 +25,8 @@ class NewsListViewModel {
     private var notificationToken: NotificationToken?
     private var refreshTimer: Timer?
     
+    weak var coordinator: NewsListCoordinator?
+    
     var displayMode: DisplayMode = .normal {
         didSet {
             onDisplayModeChanged?()
@@ -46,7 +48,7 @@ class NewsListViewModel {
     
     var onNewsUpdated: (() -> Void)?
     var onDisplayModeChanged: (() -> Void)?
-    var onError: ((String) -> Void)?
+    var onShowError: ((String) -> Void)?
     var onRefreshStarted: (() -> Void)?
     var onRefreshCompleted: (() -> Void)?
     
@@ -93,7 +95,7 @@ class NewsListViewModel {
                     self.loadNews()
                     self.onRefreshCompleted?()
                 case .failure(let error):
-                    self.onError?(error.localizedDescription)
+                    self.onShowError?(error.localizedDescription)
                     self.onRefreshCompleted?()
                 }
             }
@@ -115,6 +117,31 @@ class NewsListViewModel {
     
     func numberOfItems() -> Int {
         return newsItems?.count ?? 0
+    }
+    
+    // MARK: - Navigation Methods
+    
+    func showSettings() {
+        coordinator?.showSettings { [weak self] in
+            self?.updateRefreshInterval()
+        }
+    }
+    
+    func showNewsDetail(at index: Int) {
+        guard let newsItem = newsItems?[index],
+              let url = URL(string: newsItem.link) else { return }
+        
+        coordinator?.showNewsDetail(url: url, newsItemIndex: index) { [weak self] index in
+            self?.markAsRead(at: index)
+        }
+    }
+    
+    func showFirstLaunchMessage() {
+        coordinator?.showFirstLaunchMessage()
+    }
+    
+    func showError(message: String) {
+        coordinator?.showError(message: message)
     }
     
     func shouldAutoRefresh() -> Bool {
@@ -149,7 +176,7 @@ class NewsListViewModel {
             case .update:
                 self.onNewsUpdated?()
             case .error(let error):
-                self.onError?(error.localizedDescription)
+                self.onShowError?(error.localizedDescription)
             }
         }
     }
