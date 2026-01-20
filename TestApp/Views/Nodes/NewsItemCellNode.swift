@@ -53,11 +53,9 @@ class NewsItemCellNode: ASCellNode {
         readIndicatorNode.cornerRadius = 4
     }
     
-    private func createDefaultPlaceholder() -> UIImage {
+    private func createDefaultPlaceholder() -> UIImage? {
         let config = UIImage.SymbolConfiguration(pointSize: 32, weight: .light)
-        let image = UIImage(systemName: "newspaper", withConfiguration: config)?
-            .withTintColor(.systemGray3, renderingMode: .alwaysOriginal)
-        return image ?? UIImage(systemName: "photo")!
+        return UIImage(systemName: "newspaper", withConfiguration: config)
     }
     
     // MARK: - Configuration
